@@ -2,7 +2,7 @@
 {% load django_bootstrap5 %}
 {% bootstrap_css %}
 {% load static %}
-<link rel="stylesheet" href="{% static 'style.css' %}" type="text/css">
+<link rel="stylesheet" href="{% static 'style.css' %}?after" type="text/css">
 
 <style>
     table, th, td {
@@ -15,7 +15,7 @@
     <div class='row'>
         <div class='col-sm-9'>
             <form action="" method="get" class="form-search d-flex align-items-stretch mb-3 aos-init aos-animate">
-                <input type="text" class="form-control" name="search" placeholder={{ search }}>
+                <input type="text" class="form-control" name="keyword" placeholder={{ keyword }}>
                 <button type="submit" class="btn btn-primary">Search</button>
             </form>
             {% if not beer_list %}
@@ -23,7 +23,7 @@
                 <h3>검색 결과가 없습니다! 다른 키워드를 검색해 보는 건 어떠세요? </h3>
 
             {% else %}
-                <h3>{{ search }}에 대한 검색 결과</h3>
+                <h3>'{{ keyword }}'에 대한 검색 결과</h3>
                 <hr style="line: solid 10px black;">
                 {% for beer in beer_list %}
                     <h4><a href="/search/beerprofile/{{ beer.id }}/">{{ beer.name }}</a></h4>

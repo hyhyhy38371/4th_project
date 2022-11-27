@@ -8,7 +8,8 @@ import random
 import logging
 import pandas as pd
 from search.ml import beer_model
-
+from django.db.models import Count
+import numpy as np
 MAX_LIST_CNT = 30
 MAX_PAGE_CNT = 5
 
@@ -42,7 +43,7 @@ def search(request):
     beer_list = Beer.objects.all()
     ch_category_list = request.GET.getlist("chCategory")
     ch_country_list = request.GET.getlist("chCountry")
-
+    search_keyword = request.GET.get('search_keyword', '')
     if ch_category_list or ch_country_list:
         if ch_category_list:
             beer_list = beer_list.filter(
@@ -54,9 +55,18 @@ def search(request):
             )
         template_name = "search/search_list.html"
     else:
-        template_name = "search/search_page.html"
+        if search_keyword:
+            beer_list = beer_list.filter(
+                Q(name__icontains=search_keyword) |
+                Q(brewery__icontains=search_keyword) |
+                Q(country__icontains=search_keyword)
+            )
+            template_name = "search/keyword_list.html"
+        else:
+            template_name = "search/search_page.html"
+
     return render(request, template_name,
-                  {'beer_list': beer_list})
+                  {'beer_list': beer_list, 'keyword': search_keyword})
 def predict(request):
     user_feature = [
         request.GET.get('sweet'),
@@ -75,24 +85,94 @@ def predict(request):
         kind_list = kind_list.filter(
             Q(kind__icontains=predict_beer))[:10]
 
-    return render(request, "search/recommend.html", {'predict_beer': predict_beer, 'kind_list': kind_list})
+        df = pd.read_csv('beer_model.csv')
+        gf = ''
+        print(df)
+        df = df.drop(['스타일대분류', '양조장명', '제조국가명', '도수', '평균점수', '리뷰수', '현재상태', '평가수', 'Full Name'], axis=1)
+        df['스타일소분류'] = df['스타일소분류'].str.replace(' ', '')
+        print(predict_beer)
+        gf = df[df['스타일소분류'] == predict_beer]
+        print(gf)
+        my_favor = pd.DataFrame(columns=['Body', 'Sweet', 'Fruity', 'Hoppy', 'Malty'])
+        my_input = user_feature
+        my_favor.loc[my_favor.shape[0] + 1] = my_input
+        gf = gf.drop(['Astringent', 'Alcoholic', 'Bitter', 'Sour', 'Salty', 'Spices'], axis=1)
+        print(gf)
+        df_ac = pd.concat([gf, my_favor])
+        df_ac.fillna(0)
+        df_ac.fillna({'스타일소분류': 'recommand'}, inplace=True)
+        df_ac = df_ac.astype({'Body': 'float64'})  ## 데이터 타입 바꿔 주기
+        df_ac = df_ac.astype({'Sweet': 'float64'})
+        df_ac = df_ac.astype({'Fruity': 'float64'})  ## 데이터 타입 바꿔 주기
+        df_ac = df_ac.astype({'Hoppy': 'float64'})
+        df_ac = df_ac.astype({'Malty': 'float64'})
+    #
+        df_ab = df_ac.reset_index()
+        #print(df_ab)
+        a = df_ab['스타일소분류'].str.contains('recommand')
+    #해당 지역의 인덱스 찾기
+        df2 = df_ab[a]
+        print(df2.iloc[0])
+        df2 = df2.drop(['index'], axis=1)
+        print(df2)
+        df3 = df2.drop(['스타일소분류', '맥주명'], axis=1)
+        print("--------------------")
+        df_ac = df_ac.sub(df3.iloc[0], axis=1)
+        df_ad = df_ac.sum(axis=1)
+        print(df_ab)
+        print(df_ad)
+    # # df2.info()
+    # # df_ad.info()
+    # #
+        df_name = df_ab['맥주명']
+    # # df_final = pd.concat([df_final, df_ad])
+        df_final = pd.DataFrame(df_name, columns=['맥주명']).reset_index(drop=True)
+    # #df_final = df_final.drop(['index'], axis=1)
+        df_af = pd.DataFrame(df_ad, columns=['수치']).reset_index(drop=True)
+    # #df_af = df_af.drop(['index'], axis=1)
+        e = pd.concat([df_final, df_af], axis=1)
+    # #last_final = pd.merge(df_final, df_af, on= 'index')
+        e['수치'] = e['수치'].abs()
+        f = e.sort_values(by=['수치']).reset_index(drop=True)
+    # #---------------------
+    #     for ex in f['맥주명']:
+    #      if search_detail.name not in ex:
+    #         final = f
+    #
+    #
+        ffinal = f['맥주명'].iloc[1:6].to_list()
+        print(ffinal)
+    #
+       # fffinal = ffinal['맥주명'].to_list()
+        #print(fffinal)
+        prename_list = Beer.objects.all()
+    # # ---------------------
+        if ffinal:
+            prename_list = prename_list.filter(
+              Q(name__in=ffinal))[:5]
+
+    else:
+        prename_list = ''
+    return render(request, "search/recommend.html", {'predict_beer': predict_beer, 'kind_list': kind_list, 'prename_list':prename_list})
 
 
 @login_required
 def search_detail(request, pk):
+    name_list=''
+
     search_detail = Beer.objects.get(id=pk)
 
-    df = pd.read_csv('final_train_beer_ratings_Ver_rader model.csv', encoding='utf-8', index_col=0)
+    df = pd.read_csv('beer_profile_and_ratings_V_cat.csv', encoding='utf-8', index_col=0)
     aaa = df['Full Name'].iloc[pk]
     cc = df[df['Full Name'] == '%s' % aaa]
 
     cc = cc[
-        ['Astringent', 'Body', 'Alcoholic', 'Bitter', 'Sweet', 'Sour', 'Salty', 'Fruity', 'Hoppy', 'Spices', 'Malty']]
+        ['Body', 'Sweet', 'Fruity', 'Hoppy', 'Malty']]
     dfR = cc
     n = 0
-    angles = [x / 11 * (2 * pi) for x in range(11)]  # 각 등분점
+    angles = [x / 5 * (2 * pi) for x in range(5)]  # 각 등분점
     angles += angles[:1]  # 시작점으로 다시 돌아와야하므로 시작점 추가
-    my_palette = plt.cm.get_cmap("Set2", 11)
+    my_palette = plt.cm.get_cmap("Set2", 5)
     fig = plt.figure(figsize=(8, 8), dpi=100)
     fig.set_facecolor('white')
     color = ["#" + ''.join([random.choice('0123456789ABCDEF') for j in range(6)])][0]
@@ -121,8 +201,76 @@ def search_detail(request, pk):
 
     plt.savefig('static/beerimg.png')
 
+    # ------------------------------
+
+    df = pd.read_csv('final_proj_train_beer_ratings.csv')
+    gn = ''
+
+    df = df.drop(['스타일대분류', '양조장명', '제조국가명', '도수', '평균점수', '리뷰수', '현재상태', '평가수', 'Full Name'], axis=1)
+
+    gf = df[df['스타일소분류'] == search_detail.kind]
+
+    my_favor = pd.DataFrame(columns=['맥주명','Body', 'Sweet', 'Fruity', 'Hoppy', 'Malty'])
+    f0 = search_detail.name
+    f1 = search_detail.body  # value 넣기
+    f2 = search_detail.sweet
+    f3 = search_detail.fruity
+    f4 = search_detail.hoppy
+    f5 = search_detail.malty
+    my_input = [f0, f1, f2, f3, f4, f5]
+    my_favor.loc[my_favor.shape[0] + 1] = my_input
+    gf = gf.drop(['Astringent', 'Alcoholic', 'Bitter', 'Sour', 'Salty', 'Spices'], axis=1)
+    df_ac = pd.concat([gf, my_favor])
+    df_ac = df_ac.astype({'Body': 'int64'})  ## 데이터 타입 바꿔 주기
+    df_ac = df_ac.astype({'Sweet': 'int64'})
+    df_ac = df_ac.astype({'Fruity': 'int64'})  ## 데이터 타입 바꿔 주기
+    df_ac = df_ac.astype({'Hoppy': 'int64'})
+    df_ac = df_ac.astype({'Malty': 'int64'})
+
+    df_ab = df_ac.reset_index()
+
+    a = df_ab['맥주명'].str.contains(search_detail.name)  # 해당 지역의 인덱스 찾기
+
+    df2 = df_ab[a]
+    # print(df2.iloc[0])
+    df2 = df2.drop(['index'], axis=1)
+    df3 = df2.drop(['스타일소분류', '맥주명'], axis=1)
+    print("--------------------")
+    df_ac = df_ac.sub(df3.iloc[0], axis=1)
+    df_ad = df_ac.sum(axis=1)
+    # print(df_ab)
+    # print(df_ad)
+    # df2.info()
+    # df_ad.info()
+    #
+    df_name = df_ab['맥주명']
+    # df_final = pd.concat([df_final, df_ad])
+    df_final = pd.DataFrame(df_name, columns=['맥주명']).reset_index(drop=True)
+    #df_final = df_final.drop(['index'], axis=1)
+    df_af = pd.DataFrame(df_ad, columns=['수치']).reset_index(drop=True)
+    #df_af = df_af.drop(['index'], axis=1)
+    e = pd.concat([df_final, df_af], axis=1)
+    #last_final = pd.merge(df_final, df_af, on= 'index')
+    e['수치'] = e['수치'].abs()
+    f = e.sort_values(by=['수치'])
+    f.drop_duplicates()
+    for ex in f['맥주명']:
+        if search_detail.name not in ex:
+            final = f
+
+
+    ffinal = final.iloc[0:6]
+
+    fffinal = ffinal['맥주명'].to_list()
+    print(fffinal)
+    name_list = Beer.objects.all()
+    # ---------------------
+    if fffinal:
+        name_list = name_list.filter(
+            Q(name__in=fffinal))[:5]
+
     return render(request, "search/search_detail.html", {
-        "search_details": search_detail,
+        "search_details": search_detail, "name_list": name_list
     })
 
 
@@ -136,22 +284,30 @@ def recommend(request):
     )
 
 
-# def search_recommend(request):
-#     review_ranking = Beer.objects.all().order_by('-reviews')[:10]
-#     average_ranking = Beer.objects.all().order_by('-average')[:10]
-#
+def ranking(request):
+    review_ranking = Beer.objects.all().order_by('-reviews')[:10]
+    average_ranking = Beer.objects.all().order_by('-average')[:10]
+
+    return render(
+        request,
+        'search/ranking_beer.html',
+        {'review_ranking': review_ranking, 'average_ranking': average_ranking}
+    )
+def beer(request):
+    big_kind = Beer.objects.values('big_kind')
+    big_kind_list = Beer.objects.values_list('big_kind', flat=True).annotate(num_big_kind=Count('big_kind')).order_by('num_big_kind')
+    print(big_kind_list)
+
+    small_kind_list = Beer.objects.values_list('kind', flat=True).annotate(num_big_kind=Count('kind')).order_by(
+        'num_big_kind')
+    return render(
+        request,
+        'search/beer.html', {'big_kind_list': big_kind_list, 'small_kind_list': small_kind_list}
+    )
+# def beer(request):
+#     list = Beer.objects.values_list('big_kind', flat=True)
+#     print(list)
 #     return render(
 #         request,
-#         'search/search_list.html',
-#         {'review_ranking': review_ranking, 'average_ranking': average_ranking}
-#     )
-#
-#
-# def keyword_recommend(request):
-#     review_ranking = Beer.objects.all().order_by('-reviews')[:10]
-#     average_ranking = Beer.objects.all().order_by('-average')[:10]
-#     return render(
-#         request,
-#         'search/keyword_list.html',
-#         {'review_ranking': review_ranking, 'average_ranking': average_ranking}
+#         'search/beer.html',
 #     )

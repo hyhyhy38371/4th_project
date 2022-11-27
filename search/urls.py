@@ -5,7 +5,9 @@ urlpatterns = [
      path('', views.keyword),
      path('recommend/', views.predict),
      path('beerprofile/<int:pk>/', views.search_detail),
-     path('search/', views.search)
+     path('search/', views.search),
+     path('ranking/', views.ranking),
+     path('beer/', views.beer)
 ]
 
     

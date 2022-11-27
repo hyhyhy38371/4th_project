@@ -147,21 +147,20 @@
                                 <div style="padding:10px;"></div>
                              <b>{{ predict_beer }}</b>
                             </h3>
-                            two_trillionaires의
-                            알고리즘으로 엄선한 <br>
-                            {{ predict_beer }} TOP 10<br>
-                            한 번 둘러 보세요!
                         </tr>
                         <div style="padding:10px;"></div>
-                        {% for kl in kind_list %}
+                     {% endif %}
+                </div>
+                <div>
+                    <table>
+            {% for na in prename_list %}
                         <tr height="70">
                             <th>{{ forloop.counter }}</th>
                             <td>           </td>
-                            <td><h6><a href = "/search/beerprofile/{{ kl.id }}">{{ kl.name }}</a></h6></td>
+                            <td><h6><a href = "/search/beerprofile/{{ na.id }}">{{ na.name }}({{ na.country }})</a></h6></td>
                         </tr>
                     {% endfor %}
-                    </table>
-                     {% endif %}
+            </table>
                 </div>
             </div>
         </div>

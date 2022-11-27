@@ -1,0 +1,22 @@
+{% extends 'search/base.html' %}
+{% load django_bootstrap5 %}
+{% bootstrap_css %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'style.css' %}" type="text/css">
+{% block content %}
+
+
+{% if not big_kind_list %}
+    dk
+{% else %}
+    {% for be in big_kind_list %}
+
+      <h4>{{ be }}</h4>
+
+                {% for bee in small_kind_list %}
+                <h6> {{ bee }}</h6>
+
+                {% endfor %}
+    {% endfor %}
+{% endif %}
+{% endblock %}

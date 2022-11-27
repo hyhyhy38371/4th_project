@@ -107,6 +107,7 @@
                 <div class="card-header bg-light">
                     <i class="fa fa-comment fa"></i> REVIEW
                 </div>
+
                 <div class="card-body">
                     <ul class="list-group list-group-flush">
                         <li class="list-group-item">
@@ -133,8 +134,15 @@
 
         </div>
         <div class='col-sm-3'>
-
-            요기다 넣어 보세용
+            <table>
+            {% for na in name_list %}
+                        <tr height="70">
+                            <th>{{ forloop.counter }}</th>
+                            <td>           </td>
+                            <td><h6><a href = "/search/beerprofile/{{ na.id }}">{{ na.name }} ( {{ na.country }} )</a></h6></td>
+                        </tr>
+                    {% endfor %}
+            </table>
 
         </div>
     </div>
