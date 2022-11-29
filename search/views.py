@@ -1,5 +1,6 @@
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render
+from django.core.paginator import Paginator
+from django.shortcuts import render, get_object_or_404, redirect
 from django.db.models import Q
 from search.models import Beer
 from math import pi
@@ -8,8 +9,7 @@ import random
 import logging
 import pandas as pd
 from search.ml import beer_model
-from django.db.models import Count
-import numpy as np
+
 MAX_LIST_CNT = 30
 MAX_PAGE_CNT = 5
 
@@ -36,7 +36,28 @@ def keyword(request):
     else:
         template_name = "search/keyword_page.html"
 
-    return render(request, template_name, {'beer_list': beer_list, 'keyword': keyword})
+    paginator = Paginator(beer_list, MAX_LIST_CNT)
+    page = request.GET.get('page', 1)
+    pagenated_beer_list = paginator.get_page(page)
+
+    last_page_num = 0
+    for last_page in paginator.page_range:
+        last_page_num = last_page_num + 1
+        # 현재 페이지가 몇번째 블럭인지
+        current_block = ((int(page) - 1) / MAX_PAGE_CNT) + 1
+        current_block = int(current_block)
+        # 페이지 시작번호
+        page_start_number = ((current_block - 1) * MAX_PAGE_CNT) + 1
+        # 페이지 끝 번호
+        page_end_number = page_start_number + MAX_PAGE_CNT - 1
+
+    context_beer_list = {'last_page_num': last_page_num,
+                         'page_start_number': page_start_number,
+                         'page_end_number': page_end_number,
+                         'pagenated_beer_list': pagenated_beer_list,
+                         'keyword': keyword}
+    # print(keyword)
+    return render(request, template_name, context=context_beer_list)
 
 
 def search(request):
@@ -65,8 +86,38 @@ def search(request):
         else:
             template_name = "search/search_page.html"
 
-    return render(request, template_name,
-                  {'beer_list': beer_list, 'keyword': search_keyword})
+    paginator = Paginator(beer_list, MAX_LIST_CNT)
+    page = request.GET.get('page', 1)
+    pagenated_beer_list = paginator.get_page(page)
+
+    last_page_num = 0
+    for last_page in paginator.page_range:
+        last_page_num = last_page_num + 1
+        # 현재 페이지가 몇번째 블럭인지
+        current_block = ((int(page) - 1) / MAX_PAGE_CNT) + 1
+        current_block = int(current_block)
+        # 페이지 시작번호
+        page_start_number = ((current_block - 1) * MAX_PAGE_CNT) + 1
+        # 페이지 끝 번호
+        page_end_number = page_start_number + MAX_PAGE_CNT - 1
+
+    if ch_category_list or ch_country_list:
+        if ch_category_list:
+            ch_category_list = ch_category_list[0]
+        if ch_country_list:
+            ch_country_list = ch_country_list[0]
+    else:
+        pass
+
+    context_beer_list = {'last_page_num': last_page_num,
+                         'page_start_number': page_start_number,
+                         'page_end_number': page_end_number,
+                         'ch_category_list': ch_category_list,
+                         'ch_country_list': ch_country_list,
+                         'keyword': search_keyword,
+                         'pagenated_beer_list': pagenated_beer_list}
+
+    return render(request, template_name, context=context_beer_list)
 def predict(request):
     user_feature = [
         request.GET.get('sweet'),
@@ -110,7 +161,7 @@ def predict(request):
         df_ab = df_ac.reset_index()
         #print(df_ab)
         a = df_ab['스타일소분류'].str.contains('recommand')
-    #해당 지역의 인덱스 찾기
+        #해당 지역의 인덱스 찾기
         df2 = df_ab[a]
         print(df2.iloc[0])
         df2 = df2.drop(['index'], axis=1)
@@ -162,7 +213,7 @@ def search_detail(request, pk):
 
     search_detail = Beer.objects.get(id=pk)
 
-    df = pd.read_csv('beer_profile_and_ratings_V_cat.csv', encoding='utf-8', index_col=0)
+    df = pd.read_csv('final_train_beer_ratings_Ver_rader model1.csv', encoding='utf-8', index_col=0)
     aaa = df['Full Name'].iloc[pk]
     cc = df[df['Full Name'] == '%s' % aaa]
 
@@ -189,8 +240,8 @@ def search_detail(request, pk):
     ax.tick_params(axis='x', which='major', pad=15)  # x축과 눈금 사이에 여백을 준다.
 
     ax.set_rlabel_position(0)  # y축 각도 설정(degree 단위)
-    plt.yticks([-4, 0, 4, 7], ['', '', '', ''], fontsize=10)  # y축 눈금 설정
-    plt.ylim(-4, 7)
+    plt.yticks([-1, 0, 1, 3, 5], ['', '', '', '', ''], fontsize=10)  # y축 눈금 설정
+    plt.ylim(-1, 5)
 
     ax.plot(angles, data, color=color, linewidth=2, linestyle='solid')  # 레이더 차트 출력
     ax.fill(angles, data, color=color, alpha=0.4)  # 도형 안쪽에 색을 채워준다.
@@ -257,7 +308,8 @@ def search_detail(request, pk):
     for ex in f['맥주명']:
         if search_detail.name not in ex:
             final = f
-
+        else:
+            final = ''
 
     ffinal = final.iloc[0:6]
 
@@ -274,16 +326,6 @@ def search_detail(request, pk):
     })
 
 
-def recommend(request):
-    review_ranking = Beer.objects.all().order_by('-reviews')[:10]
-    average_ranking = Beer.objects.all().order_by('-average')[:10]
-    return render(
-        request,
-        'search/recommend.html',
-        {'review_ranking': review_ranking, 'average_ranking': average_ranking}
-    )
-
-
 def ranking(request):
     review_ranking = Beer.objects.all().order_by('-reviews')[:10]
     average_ranking = Beer.objects.all().order_by('-average')[:10]
@@ -293,21 +335,29 @@ def ranking(request):
         'search/ranking_beer.html',
         {'review_ranking': review_ranking, 'average_ranking': average_ranking}
     )
-def beer(request):
-    big_kind = Beer.objects.values('big_kind')
-    big_kind_list = Beer.objects.values_list('big_kind', flat=True).annotate(num_big_kind=Count('big_kind')).order_by('num_big_kind')
-    print(big_kind_list)
-
-    small_kind_list = Beer.objects.values_list('kind', flat=True).annotate(num_big_kind=Count('kind')).order_by(
-        'num_big_kind')
-    return render(
-        request,
-        'search/beer.html', {'big_kind_list': big_kind_list, 'small_kind_list': small_kind_list}
-    )
 # def beer(request):
-#     list = Beer.objects.values_list('big_kind', flat=True)
-#     print(list)
+#     big_kind = Beer.objects.values('big_kind')
+#     big_kind_list = Beer.objects.values_list('big_kind', flat=True).annotate(num_big_kind=Count('big_kind')).order_by('num_big_kind')
+#     print(big_kind_list)
+#
+#     small_kind_list = Beer.objects.values_list('kind', flat=True).annotate(num_big_kind=Count('kind')).order_by(
+#         'num_big_kind')
 #     return render(
 #         request,
-#         'search/beer.html',
+#         'search/beer.html', {'big_kind_list': big_kind_list, 'small_kind_list': small_kind_list}
 #     )
+
+@login_required  # 좋아요 구현
+def like(request, pk):
+    beer = get_object_or_404(Beer, id=pk)
+
+    if request.user in beer.like_users.all():
+        beer.like_users.remove(request.user)
+        beer.like_count -= 1
+        beer.save()
+    else:
+        beer.like_users.add(request.user)
+        beer.like_count += 1
+        beer.save()
+
+    return redirect('search:beerprofile', pk)

@@ -4,19 +4,13 @@
 {% load static %}
 <link rel="stylesheet" href="{% static 'style.css' %}" type="text/css">
 {% block content %}
-
-
-{% if not big_kind_list %}
-    dk
+{% if not beer_list %}
+    jj
 {% else %}
-    {% for be in big_kind_list %}
+    {% for b in beer_list %}
 
-      <h4>{{ be }}</h4>
+      <h4>{{ b.name }}</h4>
 
-                {% for bee in small_kind_list %}
-                <h6> {{ bee }}</h6>
-
-                {% endfor %}
     {% endfor %}
 {% endif %}
 {% endblock %}

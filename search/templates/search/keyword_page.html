@@ -2,7 +2,7 @@
 {% load django_bootstrap5 %}
 {% bootstrap_css %}
 {% load static %}
-<link rel="stylesheet" href="{% static 'style.css' %}?after" type="text/css">
+<link rel="stylesheet" href="{% static 'style.css?after' %}" type="text/css">
 
 {% block title %}Home{% endblock %}
 {% block content %}
@@ -20,7 +20,7 @@
         <form action="" method="get">
             <div class="form-search d-flex align-items-stretch mb-3 aos-init aos-animate">
                 <input type="text" class="form-control" name="keyword" placeholder="Name, Brewery, Style... ">
-                <button type="summit" class="btn btn-danger">search</button>
+                <button type="summit" class="btn text-white" style="background-color: #68B984"><b>search</b></button>
             </div>
         </form>
     </div>

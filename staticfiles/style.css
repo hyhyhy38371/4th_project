@@ -1,10 +1,10 @@
 @import url('https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Gugi&family=Hahmlet:wght@100;200;300;400;500;600;700;800;900&family=Jua&family=Stylish&display=swap');
 
-body, h3, h4, h5, h6{
+body, h2, h3, h4, h5, h6{
   font-family: 'Gowun Dodum', sans-serif;
 }
 
-h1, h2{
+h1{
   font-weight: 200;
   font-family: 'Gugi', cursive;
 }
@@ -15,7 +15,7 @@ p{
 
 
 body {
-  background-color: #FED049;
+  background-color: black;
   font-family: 'Gowun Dodum', sans-serif;
   font-size: 18px;
   font-weight: 500;
@@ -51,9 +51,6 @@ td {
   vertical-align:middle;
   font-weight:300;
   font-size:20px;
-  text-shadow: -1px -1px 1px rgba(0, 0, 0, 0.1);
+  text-shadow: -1px -1px 1px rgb(64, 64, 64);
   border-right: 1px solid #FFFACD;
 }
-
-body, html {cursor: url(cursor2.cur), pointer}
-a {cursor: url(cursor2.cur), auto}

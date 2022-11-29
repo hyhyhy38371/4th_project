@@ -1,0 +1,19 @@
+{% extends "account/base.html" %}
+{% load django_bootstrap5 %}
+{% bootstrap_css %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'style.css' %}" type="text/css">
+
+{% block content %}
+    <h2>혜연이 의견: 왼쪽에 테이블 만들어서 메뉴처럼 보이게 하고 나의 맥주 링크 담기</h2>
+    <p>'{{ person.username }}'가 추가한 맥주</p>
+    {% for beer in mybeers %}
+        <h4><a href="/search/beerprofile/{{ beer.id }}/">{{ beer.name }}</a></h4>
+        <h6>맥주 스타일: {{ beer.kind }}</h6>
+        <h6>양조장 이름: {{ beer.brewery }}</h6>
+        <h6>제조 국가: {{ beer.country }}</h6>
+        <hr style="line: solid 10px black;">
+    {% endfor %}
+
+
+{% endblock %}
