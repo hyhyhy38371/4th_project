@@ -261,7 +261,7 @@ def search_detail(request, pk):
 
     gf = df[df['스타일소분류'] == search_detail.kind]
 
-    my_favor = pd.DataFrame(columns=['맥주명','Body', 'Sweet', 'Fruity', 'Hoppy', 'Malty'])
+    my_favor = pd.DataFrame(columns=['맥주명', 'Body', 'Sweet', 'Fruity', 'Hoppy', 'Malty'])
     f0 = search_detail.name
     f1 = search_detail.body  # value 넣기
     f2 = search_detail.sweet

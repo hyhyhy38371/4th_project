@@ -55,5 +55,10 @@ td {
   border-right: 1px solid #FFFACD;
 }
 
-body, html {cursor: url(cursor2.cur), pointer}
+body, html {cursor: url(cursor2.cur), auto;}
 a {cursor: url(cursor2.cur), auto}
+html, body {
+  margin: 0;
+  padding: 0;
+  overflow:hidden;
+}

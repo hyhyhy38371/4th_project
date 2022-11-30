@@ -2,8 +2,8 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.shortcuts import render, redirect, get_object_or_404
-from community.models import Column, Event
-from community.forms import ColumnForm, EventForm
+from community.models import Column, Event, Board
+from community.forms import ColumnForm, EventForm, BoardForm
 
 
 @login_required
@@ -93,3 +93,34 @@ def event_new(request):
                   {
                       "form": form
                   })
+
+
+def board(request):
+    board_qu = Board.objects.all().order_by('-pk')
+    paginator = Paginator(board_qu, '3')
+    page = request.GET.get('page', 1)
+    pagenated_board_qu = paginator.get_page(page)
+    context_eve = {'board_list': board_qu, 'pagenated_board_qu': pagenated_board_qu}
+
+    return render(request, template_name="community/board.html", context=context_eve)
+
+
+def board_detail(request, pk):
+    board = Board.objects.get(pk=pk)
+    return render(request, "community/board_detail.html",
+                  {
+                      "boards": board,
+                  })
+
+
+def board_new(request):
+    if request.method == 'GET':
+        form = BoardForm()
+    else:
+        form = BoardForm(request.POST, request.FILES)
+        if form.is_valid():
+            board = form.save()
+            return redirect((f"/community/board/{board.pk}"))
+    return render(request, "community/board_new.html", {
+        "form": form
+    })
