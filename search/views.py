@@ -10,7 +10,7 @@ import logging
 import pandas as pd
 from search.ml import beer_model
 
-MAX_LIST_CNT = 30
+MAX_LIST_CNT = 10
 MAX_PAGE_CNT = 5
 
 
@@ -56,7 +56,6 @@ def keyword(request):
                          'page_end_number': page_end_number,
                          'pagenated_beer_list': pagenated_beer_list,
                          'keyword': keyword}
-    # print(keyword)
     return render(request, template_name, context=context_beer_list)
 
 
@@ -137,18 +136,13 @@ def predict(request):
             Q(kind__icontains=predict_beer))[:10]
 
         df = pd.read_csv('beer_model.csv')
-        gf = ''
-        print(df)
         df = df.drop(['스타일대분류', '양조장명', '제조국가명', '도수', '평균점수', '리뷰수', '현재상태', '평가수', 'Full Name'], axis=1)
         df['스타일소분류'] = df['스타일소분류'].str.replace(' ', '')
-        print(predict_beer)
         gf = df[df['스타일소분류'] == predict_beer]
-        print(gf)
         my_favor = pd.DataFrame(columns=['Body', 'Sweet', 'Fruity', 'Hoppy', 'Malty'])
         my_input = user_feature
         my_favor.loc[my_favor.shape[0] + 1] = my_input
         gf = gf.drop(['Astringent', 'Alcoholic', 'Bitter', 'Sour', 'Salty', 'Spices'], axis=1)
-        print(gf)
         df_ac = pd.concat([gf, my_favor])
         df_ac.fillna(0)
         df_ac.fillna({'스타일소분류': 'recommand'}, inplace=True)
@@ -159,22 +153,14 @@ def predict(request):
         df_ac = df_ac.astype({'Malty': 'float64'})
     #
         df_ab = df_ac.reset_index()
-        #print(df_ab)
         a = df_ab['스타일소분류'].str.contains('recommand')
-        #해당 지역의 인덱스 찾기
         df2 = df_ab[a]
-        print(df2.iloc[0])
         df2 = df2.drop(['index'], axis=1)
-        print(df2)
         df3 = df2.drop(['스타일소분류', '맥주명'], axis=1)
-        print("--------------------")
+
         df_ac = df_ac.sub(df3.iloc[0], axis=1)
         df_ad = df_ac.sum(axis=1)
-        print(df_ab)
-        print(df_ad)
-    # # df2.info()
-    # # df_ad.info()
-    # #
+
         df_name = df_ab['맥주명']
     # # df_final = pd.concat([df_final, df_ad])
         df_final = pd.DataFrame(df_name, columns=['맥주명']).reset_index(drop=True)
@@ -185,26 +171,21 @@ def predict(request):
     # #last_final = pd.merge(df_final, df_af, on= 'index')
         e['수치'] = e['수치'].abs()
         f = e.sort_values(by=['수치']).reset_index(drop=True)
-    # #---------------------
-    #     for ex in f['맥주명']:
-    #      if search_detail.name not in ex:
-    #         final = f
-    #
-    #
+
         ffinal = f['맥주명'].iloc[1:6].to_list()
-        print(ffinal)
-    #
-       # fffinal = ffinal['맥주명'].to_list()
-        #print(fffinal)
+
         prename_list = Beer.objects.all()
     # # ---------------------
         if ffinal:
             prename_list = prename_list.filter(
-              Q(name__in=ffinal))[:5]
-
+              Q(name__in=ffinal))
+        prename_list = prename_list[:5]
+        print(prename_list)
     else:
         prename_list = ''
-    return render(request, "search/recommend.html", {'predict_beer': predict_beer, 'kind_list': kind_list, 'prename_list':prename_list})
+    return render(request, "search/recommend.html", {'predict_beer': predict_beer, 'kind_list': kind_list,
+                                                     'prename_list': prename_list})
+
 
 
 @login_required
@@ -213,12 +194,23 @@ def search_detail(request, pk):
 
     search_detail = Beer.objects.get(id=pk)
 
-    df = pd.read_csv('final_train_beer_ratings_Ver_rader model1.csv', encoding='utf-8', index_col=0)
+    import matplotlib
+    import matplotlib.font_manager as fm
+
+    fm.get_fontconfig_fonts()
+    font_location = 'C:\Windows\Fonts\malgun.ttf'  # For Windows
+    font_name = fm.FontProperties(fname=font_location).get_name()
+    matplotlib.rc('font', family=font_name)
+
+
+
+    df = pd.read_csv('final_train_beer_ratings_Ver_rader model1.csv', encoding='utf-8-sig', index_col=0)
     aaa = df['Full Name'].iloc[pk]
     cc = df[df['Full Name'] == '%s' % aaa]
 
     cc = cc[
         ['Body', 'Sweet', 'Fruity', 'Hoppy', 'Malty']]
+    cc = cc.rename(columns={'Body':'바디감','Sweet':'당도','Fruity':'과일향','Hoppy':'홉향','Malty':'맥아향'})
     dfR = cc
     n = 0
     angles = [x / 5 * (2 * pi) for x in range(5)]  # 각 등분점
@@ -236,8 +228,8 @@ def search_detail(request, pk):
     ax.set_theta_offset(pi / 2)  # 시작점
     ax.set_theta_direction(-1)  # 그려지는 방향 시계방향
 
-    plt.xticks(angles[:-1], labels, fontsize=13)  # x축 눈금 라벨
-    ax.tick_params(axis='x', which='major', pad=15)  # x축과 눈금 사이에 여백을 준다.
+    plt.xticks(angles[:-1], labels, fontsize=27)  # x축 눈금 라벨
+    ax.tick_params(axis='x', which='major', pad=30)  # x축과 눈금 사이에 여백을 준다.
 
     ax.set_rlabel_position(0)  # y축 각도 설정(degree 단위)
     plt.yticks([-1, 0, 1, 3, 5], ['', '', '', '', ''], fontsize=10)  # y축 눈금 설정
@@ -246,7 +238,7 @@ def search_detail(request, pk):
     ax.plot(angles, data, color=color, linewidth=2, linestyle='solid')  # 레이더 차트 출력
     ax.fill(angles, data, color=color, alpha=0.4)  # 도형 안쪽에 색을 채워준다.
 
-    plt.title('', size=13, color=color, x=0.5, y=1, ha='center')  # 타이틀은 캐릭터 클래스로 한다.
+    plt.title('', size=20, color=color, x=0.5, y=1, ha='center')  # 타이틀은 캐릭터 클래스로 한다.
 
     plt.tight_layout(pad=5)  # subplot간 패딩 조절
 
@@ -261,7 +253,7 @@ def search_detail(request, pk):
 
     gf = df[df['스타일소분류'] == search_detail.kind]
 
-    my_favor = pd.DataFrame(columns=['맥주명', 'Body', 'Sweet', 'Fruity', 'Hoppy', 'Malty'])
+    my_favor = pd.DataFrame(columns=['맥주명','Body', 'Sweet', 'Fruity', 'Hoppy', 'Malty'])
     f0 = search_detail.name
     f1 = search_detail.body  # value 넣기
     f2 = search_detail.sweet
@@ -283,16 +275,11 @@ def search_detail(request, pk):
     a = df_ab['맥주명'].str.contains(search_detail.name)  # 해당 지역의 인덱스 찾기
 
     df2 = df_ab[a]
-    # print(df2.iloc[0])
     df2 = df2.drop(['index'], axis=1)
     df3 = df2.drop(['스타일소분류', '맥주명'], axis=1)
     print("--------------------")
     df_ac = df_ac.sub(df3.iloc[0], axis=1)
     df_ad = df_ac.sum(axis=1)
-    # print(df_ab)
-    # print(df_ad)
-    # df2.info()
-    # df_ad.info()
     #
     df_name = df_ab['맥주명']
     # df_final = pd.concat([df_final, df_ad])
@@ -314,7 +301,6 @@ def search_detail(request, pk):
     ffinal = final.iloc[0:6]
 
     fffinal = ffinal['맥주명'].to_list()
-    print(fffinal)
     name_list = Beer.objects.all()
     # ---------------------
     if fffinal:
@@ -335,18 +321,6 @@ def ranking(request):
         'search/ranking_beer.html',
         {'review_ranking': review_ranking, 'average_ranking': average_ranking}
     )
-# def beer(request):
-#     big_kind = Beer.objects.values('big_kind')
-#     big_kind_list = Beer.objects.values_list('big_kind', flat=True).annotate(num_big_kind=Count('big_kind')).order_by('num_big_kind')
-#     print(big_kind_list)
-#
-#     small_kind_list = Beer.objects.values_list('kind', flat=True).annotate(num_big_kind=Count('kind')).order_by(
-#         'num_big_kind')
-#     return render(
-#         request,
-#         'search/beer.html', {'big_kind_list': big_kind_list, 'small_kind_list': small_kind_list}
-#     )
-
 @login_required  # 좋아요 구현
 def like(request, pk):
     beer = get_object_or_404(Beer, id=pk)

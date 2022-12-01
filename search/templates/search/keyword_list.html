@@ -10,8 +10,12 @@
     td {
         text-align: center;
     }
+    div{
+        background-color: white;
+    }
 </style>
 {% block content %}
+<body>
     <div class='row'>
         <div class='col-sm-9'>
             <form action="" method="get" class="form-search d-flex align-items-stretch mb-3 aos-init aos-animate">
@@ -92,4 +96,5 @@
     </ul>
     <!-- 페이징처리 끝 -->
     <a href="{{ request.build_absolute_uri }}" style="text-decoration-line: none;">Back to top</a>
+    </body>
 {% endblock %}
