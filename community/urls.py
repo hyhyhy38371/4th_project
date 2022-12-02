@@ -12,6 +12,7 @@ urlpatterns = [
     path('event/<int:pk>/', views.event_detail),
     path('board/', views.board),
     path('board/new/', views.board_new),
-    path('board/<int:pk>/', views.board_detail)
+    path('board/<int:pk>/', views.board_detail),
+    path("board/<int:pk>/edit/", views.board_edit)
 
 ]

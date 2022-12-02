@@ -13,14 +13,15 @@
             <h2>{{ boards.title }}</h2></div>
         <div style="padding:10px;"></div>
         <small style="float: right;">작성자: {{ boards.author }} </small>
-        {% if columns.image %}
+        {% if boards.image %}
             <img src="{{ boards.image.url }}" class="img-fluid" width="1250" alt="작성자가 등록한 이미지입니다">
         {% endif %}
         <small style="float: right;">작성일시: {{ boards.created_at }}</small>
         <hr>
         <div style="padding:15px;"></div>
         <div class="container-fluid">
-            {{ boards.content }}</div>
+            {{ boards.content|safe }}
+        </div>
         <div style="padding:15px;">
         </div>
         <div class="container-sm">

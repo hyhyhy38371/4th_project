@@ -4,25 +4,44 @@
     {% bootstrap_css %}
     {% load static %}
     <link rel="stylesheet" href="{% static 'style.css' %}" type="text/css">
-    <div class="container-lg">
+    <div class="container">
         <div style="padding:15px;"></div>
-        <h1>Board 리스트</h1>
-        <div style="padding:15px;"></div>
+        <table class="table">
+            <td height="250">
+                <h1>자유 게시판</h1>
+            </td>
+        </table>
+        <div style="padding:10px;"></div>
+        <a href="new/"><button class="btn btn-success" style="float: right" >새 글 작성</button></a>
+        <div style="padding:30px;"></div>
+        <table style="width: 1275px;">
+            <tr style="text-align: center">
+                <th style="background-color: #dec06a" width="100px"><b><b>공지</b></b></th>
+                <td><b><b>공지 내용</b></b></td>
+
+            </tr>
+            <tr>
+                <th style="background-color: #dec06a" width="100px"><b><b>공지</b></b></th>
+                <td style="text-align: center"><b><b>공지 내용</b></b></td>
+
+            </tr>
+            <tr>
+                <th style="background-color: #dec06a" width="100px"><b><b>공지</b></b></th>
+                <td style="text-align: center"><b><b>공지 내용</b></b></td>
+
+            </tr>
         {% for board in pagenated_board_qu %}
-            <div class="card" style="width: 80rem;">
-                <a href ="{{ board.pk }}/"></a>
-                <div class="card-body">
-                    <h6 class="card-title"><a href="{{ board.pk }}/"> {{ board.title }}</a></h6>
-                </div>
-            </div>
-            <div style="padding:20px;">
-            </div>
+            <tr>
+                    <th style="background-color: #FED049">{{ forloop.revcounter }}</th>
+                    <td style="text-align: center;"><a href ="{{ board.pk }}/"></a>
+                    <h5 class="card-title"><a href="{{ board.pk }}/"> {{ board.title }}</a></h5>
+                    </td>
+                    <td style="text-align: right; width:290px"><h6>{{ board.created_at }}</h6></td>
+            </tr>
         {% endfor %}
+    </table>
         <div style="padding:20px;">
-        </div>
-        <a href="new/"><button class="btn btn-success" style="float: right" >새 컬럼 작성</button></a>
-        <div style="padding:30px;">
-        </div>
+        <div style="padding:10px;">
     </div>
     <hr>
     <!-- 페이징처리 시작 -->
@@ -61,4 +80,7 @@
         {% endif %}
     </ul>
     <!-- 페이징처리 끝 -->
+        </div>
+    </div>
+
 {% endblock %}

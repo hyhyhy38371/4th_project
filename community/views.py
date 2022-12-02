@@ -97,7 +97,7 @@ def event_new(request):
 
 def board(request):
     board_qu = Board.objects.all().order_by('-pk')
-    paginator = Paginator(board_qu, '3')
+    paginator = Paginator(board_qu, '20')
     page = request.GET.get('page', 1)
     pagenated_board_qu = paginator.get_page(page)
     context_eve = {'board_list': board_qu, 'pagenated_board_qu': pagenated_board_qu}
@@ -123,4 +123,23 @@ def board_new(request):
             return redirect((f"/community/board/{board.pk}"))
     return render(request, "community/board_new.html", {
         "form": form
+    })
+
+
+def board_edit(request, pk):
+    board = Board.objects.get(pk=pk)
+
+    if request.method == "POST":
+        form = BoardForm(request.POST, instance=board)
+        if form.is_valid():
+            # form.cleaned_data
+            board = form.save()
+            messages.success(request, "successfully modified")
+
+            return redirect(f"/community/board/{board.pk}/")
+    else:
+        form = BoardForm(instance=board)
+
+    return render(request, "community/board_edit.html", {
+        "form": form,
     })
