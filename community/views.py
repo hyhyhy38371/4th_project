@@ -41,6 +41,7 @@ def column_new(request):
     })
 
 
+@login_required
 def column_edit(request, pk):
     column = Column.objects.get(pk=pk)
 
@@ -49,7 +50,7 @@ def column_edit(request, pk):
         if form.is_valid():
             # form.cleaned_data
             column = form.save()
-            messages.success(request, "successfully modified")
+            messages.success(request, "성공적으로 글이 수정되었습니다.")
 
             return redirect(f"/community/column/{column.pk}/")
     else:
@@ -95,6 +96,26 @@ def event_new(request):
                   })
 
 
+@login_required
+def event_edit(request, pk):
+    event = Event.objects.get(pk=pk)
+
+    if request.method == "POST":
+        form = EventForm(request.POST, instance=event)
+        if form.is_valid():
+            # form.cleaned_data
+            event = form.save()
+            messages.success(request, "성공적으로 글이 수정되었습니다.")
+
+            return redirect(f"/community/event/{event.pk}/")
+    else:
+        form = EventForm(instance=event)
+
+    return render(request, "community/event_edit.html", {
+        "form": form,
+    })
+
+
 def board(request):
     board_qu = Board.objects.all().order_by('-pk')
     paginator = Paginator(board_qu, '20')
@@ -104,7 +125,7 @@ def board(request):
 
     return render(request, template_name="community/board.html", context=context_eve)
 
-
+@login_required
 def board_detail(request, pk):
     board = Board.objects.get(pk=pk)
     return render(request, "community/board_detail.html",
@@ -112,7 +133,7 @@ def board_detail(request, pk):
                       "boards": board,
                   })
 
-
+@login_required
 def board_new(request):
     if request.method == 'GET':
         form = BoardForm()

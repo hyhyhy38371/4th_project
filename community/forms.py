@@ -30,8 +30,8 @@ class BoardForm(forms.ModelForm):
         model = Board
         fields = ['title', 'content', 'image', ]
         labels = {
-            'title': '컬럼 제목',
-            'content': '컬럼 내용',
-            'image': '컬럼 이미지',
+            'title': '자유 게시판 제목',
+            'content': '자유 게시판 내용',
+            'image': '자유 게시판 이미지',
             'author': '작성자',
         }

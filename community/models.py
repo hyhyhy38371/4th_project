@@ -1,4 +1,6 @@
 from django.db import models
+from imagekit.models import ImageSpecField
+from pilkit.processors import ResizeToFill
 from beer_recommend_prj import settings
 from beer_recommend_prj.settings import MEDIA_ROOT
 
@@ -10,6 +12,12 @@ class Column(models.Model):
     image = models.ImageField(upload_to=MEDIA_ROOT, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    thumbnail_image = ImageSpecField(
+        source='image',
+        processors=[ResizeToFill(120, 80)],
+        format='JPEG',
+        options={'quality': 60}
+    )
 
     def get_absolute_url(self):
         # TODO : 장고의 URL Reverse 기능을 사용하기
@@ -25,6 +33,12 @@ class Event(models.Model):
     image = models.ImageField(upload_to=MEDIA_ROOT, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    thumbnail_image = ImageSpecField(
+        source='image',
+        processors=[ResizeToFill(120, 80)],
+        format='JPEG',
+        options={'quality': 60}
+    )
 
     def get_absolute_url(self):
         # TODO : 장고의 URL Reverse 기능을 사용하기

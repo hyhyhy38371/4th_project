@@ -10,9 +10,8 @@ import logging
 import pandas as pd
 from search.ml import beer_model
 
-MAX_LIST_CNT = 10
+MAX_LIST_CNT = 30
 MAX_PAGE_CNT = 5
-
 
 logger = logging.getLogger('tipper')
 logger.setLevel(logging.DEBUG)
@@ -117,6 +116,8 @@ def search(request):
                          'pagenated_beer_list': pagenated_beer_list}
 
     return render(request, template_name, context=context_beer_list)
+
+
 def predict(request):
     user_feature = [
         request.GET.get('sweet'),
@@ -187,10 +188,9 @@ def predict(request):
                                                      'prename_list': prename_list})
 
 
-
 @login_required
 def search_detail(request, pk):
-    name_list=''
+    name_list = ''
 
     search_detail = Beer.objects.get(id=pk)
 
@@ -202,15 +202,13 @@ def search_detail(request, pk):
     font_name = fm.FontProperties(fname=font_location).get_name()
     matplotlib.rc('font', family=font_name)
 
-
-
     df = pd.read_csv('final_train_beer_ratings_Ver_rader model1.csv', encoding='utf-8-sig', index_col=0)
     aaa = df['Full Name'].iloc[pk]
     cc = df[df['Full Name'] == '%s' % aaa]
 
     cc = cc[
         ['Body', 'Sweet', 'Fruity', 'Hoppy', 'Malty']]
-    cc = cc.rename(columns={'Body':'바디감','Sweet':'당도','Fruity':'과일향','Hoppy':'홉향','Malty':'맥아향'})
+    cc = cc.rename(columns={'Body': '바디감', 'Sweet': '당도', 'Fruity': '과일향', 'Hoppy': '홉향', 'Malty': '맥아향'})
     dfR = cc
     n = 0
     angles = [x / 5 * (2 * pi) for x in range(5)]  # 각 등분점
@@ -253,7 +251,7 @@ def search_detail(request, pk):
 
     gf = df[df['스타일소분류'] == search_detail.kind]
 
-    my_favor = pd.DataFrame(columns=['맥주명','Body', 'Sweet', 'Fruity', 'Hoppy', 'Malty'])
+    my_favor = pd.DataFrame(columns=['맥주명', 'Body', 'Sweet', 'Fruity', 'Hoppy', 'Malty'])
     f0 = search_detail.name
     f1 = search_detail.body  # value 넣기
     f2 = search_detail.sweet
@@ -284,11 +282,11 @@ def search_detail(request, pk):
     df_name = df_ab['맥주명']
     # df_final = pd.concat([df_final, df_ad])
     df_final = pd.DataFrame(df_name, columns=['맥주명']).reset_index(drop=True)
-    #df_final = df_final.drop(['index'], axis=1)
+    # df_final = df_final.drop(['index'], axis=1)
     df_af = pd.DataFrame(df_ad, columns=['수치']).reset_index(drop=True)
-    #df_af = df_af.drop(['index'], axis=1)
+    # df_af = df_af.drop(['index'], axis=1)
     e = pd.concat([df_final, df_af], axis=1)
-    #last_final = pd.merge(df_final, df_af, on= 'index')
+    # last_final = pd.merge(df_final, df_af, on= 'index')
     e['수치'] = e['수치'].abs()
     f = e.sort_values(by=['수치'])
     f.drop_duplicates()
@@ -298,14 +296,14 @@ def search_detail(request, pk):
         else:
             final = ''
 
-    ffinal = final.iloc[0:6]
+    ffinal = final.iloc[0:7]
 
     fffinal = ffinal['맥주명'].to_list()
     name_list = Beer.objects.all()
     # ---------------------
     if fffinal:
         name_list = name_list.filter(
-            Q(name__in=fffinal))[:5]
+            Q(name__in=fffinal))[1:6]
 
     return render(request, "search/search_detail.html", {
         "search_details": search_detail, "name_list": name_list
@@ -321,6 +319,8 @@ def ranking(request):
         'search/ranking_beer.html',
         {'review_ranking': review_ranking, 'average_ranking': average_ranking}
     )
+
+
 @login_required  # 좋아요 구현
 def like(request, pk):
     beer = get_object_or_404(Beer, id=pk)

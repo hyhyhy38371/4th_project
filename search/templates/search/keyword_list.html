@@ -5,7 +5,7 @@
 <link rel="stylesheet" href="{% static 'style.css' %}" type="text/css">
 
 <style>
-    table, th, td {
+    table, th, td, tr{
     }
     td {
         text-align: center;
@@ -31,18 +31,30 @@
             {% else %}
                 <h3 style="color: #4A3000">{{ keyword }}에 대한 검색 결과</h3>
                 <hr style="line: solid 10px black;">
+                <table style="width: 965px">
                 {% for beer in pagenated_beer_list %}
-                    <h4 style="color: #B39C69"><a href="/search/beerprofile/{{ beer.id }}/">{{ beer.name }}</a></h4>
-                    <h6>맥주 스타일: {{ beer.kind }}</h6>
-                    <h6>양조장 이름: {{ beer.brewery }}</h6>
-                    <h6>제조 국가: {{ beer.country }}</h6>
-                    <hr style="line: solid 10px black;">
+                    <tr style="border-top: 10px solid white; border-bottom: 1px solid white;">
+                    <th style="border-top: 1px solid white; border-bottom: 1px solid white;"><b>{{ forloop.counter }}</b></th>
+                    <td>
+                    <h4 style="color: #B39C69; text-align: left"><a href="/search/beerprofile/{{ beer.id }}/">{{ beer.name }}</a></h4>
+                    <h6 style="text-align: left">맥주 스타일: {{ beer.kind }}</h6>
+                    <h6 style="text-align: left">양조장 이름: {{ beer.brewery }}</h6>
+                    <h6 style="text-align: left">제조 국가: {{ beer.country }}</h6>
+                    </td>
+                    </tr>
                 {% endfor %}
+                </table>
             {% endif %}
             </div>
         </div>
         <div class='col-sm-3'>
-
+            <div style="padding:58px;"></div>
+            <div class="card" style="width: 18rem;">
+                <img class="img-fluid" src="{% static '스텔라 광고.jpg' %}" alt="맥주 광고 이미지" width="300">
+                <div class="card-body">
+                    <p class="card-text">'650년 전통의 스텔라 아르투아' ‘스텔라’는 라틴어로 별을 의미하며, ‘아르투아’는 브루마스터였던 세바스찬 아르투아 (Sebastian Artois)의 이름에서 유래하였습니다. 병마다 새겨진 별은 스텔라 아르투아가 탄생한 크리스마스의 빛나는 순간을 나타냅니다. 스텔라 아르투아와 올 겨울 크리스마스를 함께하세요.</p>
+                </div>
+            </div>
         </div>
     </div>
     <hr>
